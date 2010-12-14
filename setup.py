@@ -8,7 +8,7 @@ setup(
     long_description="""""",
     author='Kumar McMillan',
     author_email='kumar.mcmillan@gmail.com',
-    license="",
+    license="Apache License",
     packages=find_packages(exclude=['ez_setup']),
     install_requires=[r for r in open('requirements.txt')
                       if r.strip() and not r.startswith('#')],
