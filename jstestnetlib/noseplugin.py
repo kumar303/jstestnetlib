@@ -43,10 +43,9 @@ class JSTests(Plugin):
                                         self.options.jstests_server))
 
         tests = self.conn.run_tests(self.options.jstests_suite)
-        for result in tests['results']:
-            for test in result['results']['tests']:
-                yield JSTestCase(result['worker_id'], test)
-                # TODO(Kumar) check stop_on_error for nosetests -x
+        for test in tests['results']:
+            yield JSTestCase(test)
+            # TODO(Kumar) check stop_on_error for nosetests -x
 
 
 class JSTestError(Exception):
@@ -57,8 +56,7 @@ class JSTestCase(unittest.TestCase):
     """A test case that represents a remote test known by the server."""
     __test__ = False # this is not a collectible test
 
-    def __init__(self, worker_id, test):
-        self.worker_id = worker_id
+    def __init__(self, test):
         self.test = test
         super(JSTestCase, self).__init__()
 
@@ -77,8 +75,10 @@ class JSTestCase(unittest.TestCase):
                     # log.debug(repr(self.test))
                     msg = assertion['message'] or '<unknown error>'
                     traceback = None # Python
-                    e = (JSTestError, "%s %s" % (
-                         msg, assertion['stacktrace'] or ''), traceback)
+                    # TODO(Kumar) add shortened worker_user_agent here?
+                    e = (JSTestError, "[worker=%s] %s %s" % (
+                         assertion['worker_id'], msg,
+                         assertion['stacktrace'] or ''), traceback)
                     result.addError(self, e)
                     break
             if passed:
@@ -93,9 +93,9 @@ class JSTestCase(unittest.TestCase):
         return repr(self)
 
     def shortDescription(self):
-        return "%r %s: %s" % (self, self.test['module'], self.test['test'])
+        return "%r: %s: %s" % (self, self.test['module'], self.test['test'])
 
     def __repr__(self):
-        return "JSTest [worker=%s]" % self.worker_id
+        return "JS"
 
     __str__ = __repr__
