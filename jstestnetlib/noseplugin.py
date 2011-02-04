@@ -19,6 +19,11 @@ class JSTests(Plugin):
                           help='http://jstestnet-server/')
         parser.add_option('--jstests-suite', action="store",
                           help='Name of test suite to run')
+        parser.add_option('--jstests-browsers', action="store",
+                          help=('Comma separated list of browsers to run '
+                                'tests against, see JS TestNet docs for '
+                                'details. Example: '
+                                'firefox=~3,firefox=~4,chrome'))
         self.parser = parser
 
     def configure(self, options, conf):
@@ -30,6 +35,8 @@ class JSTests(Plugin):
             self.parser.error("Missing --jstests-server")
         if not self.options.jstests_suite:
             self.parser.error("Missing --jstests-suite")
+        if not self.options.jstests_browsers:
+            self.parser.error("Missing --jstests-browsers")
         self.started = False
         self.conn = Connection(self.options.jstests_server)
 
@@ -39,10 +46,12 @@ class JSTests(Plugin):
             # and only once.
             return
         self.started = True
-        log.debug('Starting %r [%s]' % (self.options.jstests_suite,
-                                        self.options.jstests_server))
+        log.debug('Starting %r [%s] %s' % (self.options.jstests_suite,
+                                           self.options.jstests_server,
+                                           self.options.jstests_browsers))
 
-        tests = self.conn.run_tests(self.options.jstests_suite)
+        tests = self.conn.run_tests(self.options.jstests_suite,
+                                    self.options.jstests_browsers)
         for test in tests['results']:
             yield JSTestCase(test)
             # TODO(Kumar) check stop_on_error for nosetests -x

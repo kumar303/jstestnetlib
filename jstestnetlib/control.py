@@ -3,6 +3,7 @@
 import json
 import optparse
 import time
+import urllib
 
 from httplib2 import Http
 
@@ -24,16 +25,18 @@ class Connection(object):
         if not uri.startswith('/'):
             uri = "/%s" % uri
         resp, content = h.request("%s%s" % (self.server, uri), 'GET')
-        if not resp['status'] == '200':
-            raise ConnectionError(
-                    "Unepected status code: %s, %r" % (resp['status'], resp))
         if not resp['content-type'] == 'application/json':
             raise ConnectionError(
                     "Did not receive a JSON response: %r" % resp)
-        return json.loads(content)
+        data = json.loads(content)
+        if resp['status'] != '200':
+            raise ConnectionError("[%s] %s" % (resp['status'],
+                                               data.get('message')))
+        return data
 
-    def run_tests(self, test_suite):
-        test = self.get('/start_tests/%s' % test_suite)
+    def run_tests(self, test_suite, browsers):
+        test = self.get('/start_tests/%s?browsers=%s' % (
+                                    test_suite, urllib.quote(browsers)))
         results = []
         finished = False
 
