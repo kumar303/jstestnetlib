@@ -95,8 +95,10 @@ class JSTestCase(unittest.TestCase):
                     msg = assertion['message'] or '<unknown error>'
                     traceback = None # Python
                     # TODO(Kumar) add shortened worker_user_agent here?
-                    e = (JSTestError, "[worker=%s] %s %s" % (
-                         assertion['worker_id'], msg,
+                    e = (JSTestError, "%s on <%s>{%s} %s" % (
+                         msg,
+                         assertion['browser'],
+                         assertion['worker_id'],
                          assertion['stacktrace'] or ''), traceback)
                     result.addError(self, e)
                     break
