@@ -53,8 +53,18 @@ class JSTests(Plugin):
         tests = self.conn.run_tests(self.options.jstests_suite,
                                     self.options.jstests_browsers)
         for test in tests['results']:
+            successful = True
+            # TODO(Kumar) find a way to not parse results twice.
+            for assertion in test['assertions']:
+                if not assertion['result']:
+                    successful = False
+                    break
             yield JSTestCase(test)
-            # TODO(Kumar) check stop_on_error for nosetests -x
+            if self.result.shouldStop and not self.successful:
+                break
+
+    def prepareTestResult(self, result):
+        self.result = result
 
 
 class JSTestError(Exception):
