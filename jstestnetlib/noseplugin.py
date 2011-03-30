@@ -24,6 +24,9 @@ class JSTests(Plugin):
                                 'tests against, see JS TestNet docs for '
                                 'details. Example: '
                                 'firefox=~3,firefox=~4,chrome'))
+        parser.add_option('--jstests-restart', action="store_true",
+                          help=('Restarts all browser workers '
+                                'before running tests.'))
         self.parser = parser
 
     def configure(self, options, conf):
@@ -46,6 +49,9 @@ class JSTests(Plugin):
             # and only once.
             return
         self.started = True
+        if self.options.jstests_restart:
+            resp = self.conn.get('/restart_workers')
+            log.debug('Restarted %s worker(s)' % resp['workers_restarted'])
         log.debug('Starting %r [%s] %s' % (self.options.jstests_suite,
                                            self.options.jstests_server,
                                            self.options.jstests_browsers))
