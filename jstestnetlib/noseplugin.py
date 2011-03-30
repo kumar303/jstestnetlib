@@ -99,7 +99,7 @@ class JSTestCase(unittest.TestCase):
                          msg,
                          assertion['browser'],
                          assertion['worker_id'],
-                         assertion['stacktrace'] or ''), traceback)
+                         assertion.get('stacktrace') or ''), traceback)
                     result.addError(self, e)
                     break
             if passed:
