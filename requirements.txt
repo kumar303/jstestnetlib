@@ -3,3 +3,6 @@
 #
 Nose
 httplib2
+psutil>=0.2.0
+# Required for tests:
+fudge
