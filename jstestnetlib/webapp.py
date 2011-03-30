@@ -18,15 +18,7 @@ class IWebapp(object):
 
     A class returned by a webapp factory should return an instance of
     something that implements this interface. See
-    :class:`ui_tester.webapp.WebappServerCmd` for a concrete example.
-
-    Required attributes:
-
-    **server_ip_addr**
-        IP address of the web application (for remote testing)
-
-    **server_port**
-        Network port of the web application
+    :class:`jstestnetlib.webapp.WebappServerCmd` for a concrete example.
 
     """
 
@@ -43,8 +35,7 @@ class WebappServerCmd(IWebapp):
     """A subprocess that controls a server for a web application.
     """
 
-    def __init__(self, cmd, server_ip_addr=None, server_port=None,
-                       logfile=None, **subproc_kwargs):
+    def __init__(self, cmd, logfile=None, **subproc_kwargs):
 
         self.cmd = cmd
 
@@ -57,10 +48,6 @@ class WebappServerCmd(IWebapp):
         self.logfile_obj = None
         self.subproc_kwargs = subproc_kwargs
         self.proc = None
-        self.server_ip_addr = server_ip_addr or self._get_server_ip_addr()
-        self.server_port = server_port
-        if not self.server_port:
-            raise ValueError("server_port= of this webapp was not set")
 
     def startup(self):
         """Start the webapp server subprocess."""
@@ -82,22 +69,6 @@ class WebappServerCmd(IWebapp):
         """Shutdown the webapp server subprocess."""
         if self.proc and self.proc.pid:
             kill_process_nicely(self.proc.pid)
-
-    def _get_server_ip_addr(self):
-        """Get externally accessible local IP of the web app under test,
-        which is assumed to be running on this machine, so that remote VM can
-        connect to the app.
-        """
-        remote = ("mozilla.com", 80)
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            s.connect(remote)
-            ip, localport = s.getsockname()
-            s.close()
-        except socket.gaierror:
-            # no Internet, assume its running on localhost
-            ip = "127.0.0.1"
-        return ip
 
 
 def kill_process_nicely(pid):
