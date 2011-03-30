@@ -101,24 +101,8 @@ class WebappServerCmd(IWebapp):
 
 
 def kill_process_nicely(pid):
-    """First tries to send INT to pid then sends KILL if that didn't work."""
-    # See http://bytes.com/groups/python/661380-how-kill-process
-    for child in psutil.Process(pid).get_children():
+    p = psutil.Process(pid)
+    for child in p.get_children():
         kill_process_nicely(child.pid)
-    tries = 0
-    max = 25
-    while 1:
-        if _kill_and_wait(pid, signal.SIGINT) != 0:
-            break
-        tries += 1
-        if tries > max:
-            raise OSError(
-                "Could not INT or KILL webapp server process %s" % pid)
-
-
-def _kill_and_wait(pid, sig):
-    """Returns 0 if the PID could not be killed."""
-    os.kill(pid, sig)
-    time.sleep(0.5)
-    killedpid, stat = os.waitpid(pid, os.WNOHANG)
-    return killedpid
+    p.send_signal(signal.SIGINT)
+    p.wait(timeout=10)
