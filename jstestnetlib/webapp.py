@@ -9,6 +9,7 @@ import tempfile
 import signal
 import subprocess
 import time
+import urllib2
 
 import psutil
 
@@ -33,11 +34,22 @@ class IWebapp(object):
 
 class WebappServerCmd(IWebapp):
     """A subprocess that controls a server for a web application.
+
+    **cmd**
+        list of commands to run (as accepted by subprocess.Popen)
+    **startup_url**
+        A URL that can be opened to verify that the server started up
+        corectly. Example: http://localhost:8000/
+    **logfile**
+        Path to the webapp's log. When None, a temp file will be created.
+
+    All other keyword arguments are passed through to subprocess.Popen
     """
 
-    def __init__(self, cmd, logfile=None, **subproc_kwargs):
+    def __init__(self, cmd, startup_url, logfile=None, **subproc_kwargs):
 
         self.cmd = cmd
+        self.startup_url = startup_url
 
         subproc_kwargs.setdefault('env', os.environ.copy())
 
@@ -58,12 +70,27 @@ class WebappServerCmd(IWebapp):
                         stderr=self.logfile_obj.fileno(),
                         stdout=self.logfile_obj.fileno(),
                         **self.subproc_kwargs)
-        time.sleep(2) # enough time to bind to local port, etc
-        if self.proc.poll() != None:
-            raise RuntimeError(
-                "server terminated early (returncode: %s), probably due to "
-                "an error.  Check the log for details: %s" % (
-                                    self.proc.returncode, self.logfile))
+        wait = 1
+        time_taken = 0
+        timeout = 10
+        # Wait for webapp to bind to socket
+        while 1:
+            time.sleep(wait)
+            try:
+                f = urllib2.urlopen(self.startup_url)
+            except urllib2.URLError, exc:
+                time_taken += wait
+                if time_taken >= timeout:
+                    raise RuntimeError(
+                        'The server did not start up within %s seconds. '
+                        'See log %r for details. (Checked with URL: %s; '
+                        'last exception: %s: %s)' % (
+                                        timeout, self.logfile,
+                                        self.startup_url,
+                                        exc.__class__.__name__, exc))
+            else:
+                f.close()
+                break
 
     def shutdown(self):
         """Shutdown the webapp server subprocess."""
