@@ -21,22 +21,33 @@ class Connection(object):
         self.wait_interval = wait_interval
 
     def get(self, uri):
+        return self.request('GET', uri)
+
+    def post(self, uri, data):
+        return self.request('POST', uri, data=data)
+
+    def request(self, method, uri, data=None):
         h = Http()
         if not uri.startswith('/'):
             uri = "/%s" % uri
-        resp, content = h.request("%s%s" % (self.server, uri), 'GET')
+        kwargs = {}
+        if data:
+            kwargs['body'] = urllib.urlencode(data)
+        resp, content = h.request("%s%s" % (self.server, uri), method=method,
+                                  **kwargs)
         if not resp['content-type'] == 'application/json':
             raise ConnectionError(
                     "Did not receive a JSON response: %r" % resp)
-        data = json.loads(content)
+        resp_data = json.loads(content)
         if resp['status'] != '200':
             raise ConnectionError("[%s] %s" % (resp['status'],
-                                               data.get('message')))
-        return data
+                                               resp_data.get('message')))
+        return resp_data
 
-    def run_tests(self, test_suite, browsers):
-        test = self.get('/start_tests/%s?browsers=%s' % (
-                                    test_suite, urllib.quote(browsers)))
+    def run_tests(self, test_suite, token, browsers):
+        test = self.post('/start_tests/',
+                         data={'browsers': browsers, 'name': test_suite,
+                               'token': token})
         results = []
         finished = False
 
@@ -52,20 +63,6 @@ class Connection(object):
         #                            u'result': True,
         #                            u'module': u'Test Sessions'}...]}}
         return server_result
-
-
-def main():
-    p = optparse.OptionParser(usage='%prog [options] http://server-addr')
-    p.add_option('-t', '--test', help='Name of test suite to run',
-                 action='store')
-    p.add_option('-l', '--list', help='List available test suites')
-    (options, args) = p.parse_args()
-
-    conn = Connection(args[0])
-    if options.test:
-        print conn.run_tests(options.test)
-    else:
-        raise NotImplementedError("option not suported yet")
 
 
 if __name__ == '__main__':

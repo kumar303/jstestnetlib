@@ -19,6 +19,8 @@ class JSTests(Plugin):
                           help='http://jstestnet-server/')
         parser.add_option('--jstests-suite', action="store",
                           help='Name of test suite to run')
+        parser.add_option('--jstests-token', action="store",
+                          help='Security token to start this test suite')
         parser.add_option('--jstests-browsers', action="store",
                           help=('Comma separated list of browsers to run '
                                 'tests against, see JS TestNet docs for '
@@ -40,6 +42,8 @@ class JSTests(Plugin):
             self.parser.error("Missing --jstests-suite")
         if not self.options.jstests_browsers:
             self.parser.error("Missing --jstests-browsers")
+        if not self.options.jstests_token:
+            self.parser.error("Missing --jstests-token")
         self.started = False
         self.conn = Connection(self.options.jstests_server)
 
@@ -57,6 +61,7 @@ class JSTests(Plugin):
                                            self.options.jstests_browsers))
 
         tests = self.conn.run_tests(self.options.jstests_suite,
+                                    self.options.jstests_token,
                                     self.options.jstests_browsers)
         for test in tests['results']:
             successful = True
