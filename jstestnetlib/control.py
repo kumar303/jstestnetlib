@@ -63,7 +63,3 @@ class Connection(object):
         #                            u'result': True,
         #                            u'module': u'Test Sessions'}...]}}
         return server_result
-
-
-if __name__ == '__main__':
-    main()
