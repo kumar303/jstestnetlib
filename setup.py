@@ -15,10 +15,11 @@ setup(
     url='',
     include_package_data=True,
     entry_points="""
-        [nose.plugins.0.10]
-        jstests = jstestnetlib.noseplugin:JSTests
-        """,
-    classifiers = [
+       [nose.plugins.0.10]
+       jstests = jstestnetlib.noseplugins:JSTests
+       django_serv = jstestnetlib.noseplugins.DjangoServPlugin
+       """,
+    classifiers=[
         'Intended Audience :: Developers',
         'Natural Language :: English',
         'Operating System :: OS Independent',

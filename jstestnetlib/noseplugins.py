@@ -5,6 +5,7 @@ import unittest
 
 from nose.plugins import Plugin
 
+from jstestnetlib import webapp
 from jstestnetlib.control import Connection
 
 log = logging.getLogger('nose.plugins.jstests')
@@ -131,3 +132,57 @@ class JSTestCase(unittest.TestCase):
         return "JS"
 
     __str__ = __repr__
+
+
+class DjangoServPlugin(Plugin):
+    """Starts/stops Django runserver for tests."""
+    name = 'django-serv'
+    score = 99
+
+    def __init__(self, root=None):
+        self.root = root
+        super(DjangoServPlugin, self).__init__()
+
+    def options(self, parser, env=os.environ):
+        super(DjangoServPlugin, self).options(parser, env=env)
+        parser.add_option('--django-root-dir', default=None,
+                          help='Root directory of the django project (where '
+                               'manage.py is).')
+        parser.add_option('--django-host', default='0.0.0.0',
+                          help='Hostname or IP address to bind manage.py '
+                               'runserver to. This must match the host/ip '
+                               'configured in your --jstests-suite default '
+                               'URL or passed in --jstests-url.'
+                               'Default: %default')
+        parser.add_option('--django-port', default=9877,
+                          help='Port to bind manage.py runserver to. '
+                               'This must match the port '
+                               'configured in your --jstests-suite default '
+                               'URL or passed in --jstests-url.'
+                               'Default: %default')
+        parser.add_option('--django-log', default=None,
+                          help='Log filename for the manage.py runserver '
+                               'command. Logs to a temp file by default.')
+        self.parser = parser
+
+    def configure(self, options, conf):
+        super(DjangoServPlugin, self).configure(options, conf)
+        self.options = options
+        if self.options.django_root_dir:
+            self.root = self.options.django_root_dir
+        assert 'manage.py' in os.listdir(self.root), (
+            'Expected this to be the root dir containing manage.py: %s' %
+            self.root)
+
+    def begin(self):
+        bind = '%s:%s' % (self.options.django_host,
+                          self.options.django_port)
+        startup_url = 'http://%s/' % bind
+        self.django_app = webapp.WebappServerCmd(
+                                ['python', 'manage.py', 'runserver', bind],
+                                startup_url, logfile=self.options.django_log,
+                                cwd=self.root)
+        self.django_app.startup()
+
+    def finalize(self, result):
+        self.django_app.shutdown()
