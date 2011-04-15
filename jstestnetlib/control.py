@@ -1,7 +1,6 @@
 
 """Remote control for a JS TestNet server."""
 import json
-import optparse
 import time
 import urllib
 
@@ -44,11 +43,11 @@ class Connection(object):
                                                resp_data.get('message')))
         return resp_data
 
-    def run_tests(self, test_suite, token, browsers):
-        test = self.post('/start_tests/',
-                         data={'browsers': browsers, 'name': test_suite,
-                               'token': token})
-        results = []
+    def run_tests(self, test_suite, token, browsers, url=None):
+        data = {'browsers': browsers, 'name': test_suite, 'token': token}
+        if url:
+            data.update(url=url)
+        test = self.post('/start_tests/', data=data)
         finished = False
 
         while not finished:

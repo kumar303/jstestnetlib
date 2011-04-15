@@ -10,6 +10,7 @@ from jstestnetlib.control import Connection
 
 log = logging.getLogger('nose.plugins.jstests')
 
+
 class JSTests(Plugin):
     """Run JavaScript tests using a JS TestNet server."""
     name = 'jstests'
@@ -20,6 +21,8 @@ class JSTests(Plugin):
                           help='http://jstestnet-server/')
         parser.add_option('--jstests-suite', action="store",
                           help='Name of test suite to run')
+        parser.add_option('--jstests-url', action="store",
+                          help='URL of the QUnit test suite')
         parser.add_option('--jstests-token', action="store",
                           help='Security token to start this test suite')
         parser.add_option('--jstests-browsers', action="store",
@@ -63,7 +66,8 @@ class JSTests(Plugin):
 
         tests = self.conn.run_tests(self.options.jstests_suite,
                                     self.options.jstests_token,
-                                    self.options.jstests_browsers)
+                                    self.options.jstests_browsers,
+                                    self.options.jstests_url)
         for test in tests['results']:
             successful = True
             # TODO(Kumar) find a way to not parse results twice.
@@ -72,7 +76,7 @@ class JSTests(Plugin):
                     successful = False
                     break
             yield JSTestCase(test)
-            if self.result.shouldStop and not self.successful:
+            if self.result.shouldStop and not successful:
                 break
 
     def prepareTestResult(self, result):
@@ -85,7 +89,7 @@ class JSTestError(Exception):
 
 class JSTestCase(unittest.TestCase):
     """A test case that represents a remote test known by the server."""
-    __test__ = False # this is not a collectible test
+    __test__ = False  # this is not a collectible test
 
     def __init__(self, test):
         self.test = test
@@ -105,7 +109,7 @@ class JSTestCase(unittest.TestCase):
                     passed = False
                     # log.debug(repr(self.test))
                     msg = assertion['message'] or '<unknown error>'
-                    traceback = None # Python
+                    traceback = None  # Python
                     # TODO(Kumar) add shortened worker_user_agent here?
                     e = (JSTestError, "%s on <%s>{%s} %s" % (
                          msg,
