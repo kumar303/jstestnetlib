@@ -183,7 +183,8 @@ class DjangoServPlugin(Plugin):
                           self.options.django_port)
         startup_url = 'http://%s/' % bind
         self.django_app = webapp.WebappServerCmd(
-                                ['python', 'manage.py', 'runserver', bind],
+                                ['python', 'manage.py', 'runserver', bind,
+                                 '--noreload'],
                                 startup_url, logfile=self.options.django_log,
                                 cwd=self.root)
         self.django_app.startup()
