@@ -17,7 +17,7 @@ setup(
     entry_points="""
        [nose.plugins.0.10]
        jstests = jstestnetlib.noseplugins:JSTests
-       django_serv = jstestnetlib.noseplugins.DjangoServPlugin
+       django_serv = jstestnetlib.noseplugins:DjangoServPlugin
        """,
     classifiers=[
         'Intended Audience :: Developers',
