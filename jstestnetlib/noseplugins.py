@@ -184,7 +184,7 @@ class DjangoServPlugin(Plugin):
     def begin(self):
         bind = '%s:%s' % (self.options.django_host,
                           self.options.django_port)
-        startup_url = 'http://%s%s' % (bind, options.django_startup_uri)
+        startup_url = 'http://%s%s' % (bind, self.options.django_startup_uri)
         self.django_app = webapp.WebappServerCmd(
                                 ['python', 'manage.py', 'runserver', bind,
                                  '--noreload'],
