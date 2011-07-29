@@ -167,6 +167,9 @@ class DjangoServPlugin(Plugin):
         parser.add_option('--django-log', default=None,
                           help='Log filename for the manage.py runserver '
                                'command. Logs to a temp file by default.')
+        parser.add_option('--django-startup-uri', default='/',
+                          help='URI for checking that the server '
+                               'started up okay. Default: GET %default')
         self.parser = parser
 
     def configure(self, options, conf):
@@ -181,7 +184,7 @@ class DjangoServPlugin(Plugin):
     def begin(self):
         bind = '%s:%s' % (self.options.django_host,
                           self.options.django_port)
-        startup_url = 'http://%s/' % bind
+        startup_url = 'http://%s%s' % (bind, options.django_startup_uri)
         self.django_app = webapp.WebappServerCmd(
                                 ['python', 'manage.py', 'runserver', bind,
                                  '--noreload'],
