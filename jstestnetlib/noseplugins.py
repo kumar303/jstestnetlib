@@ -149,9 +149,10 @@ class DjangoServPlugin(Plugin):
 
     def options(self, parser, env=os.environ):
         super(DjangoServPlugin, self).options(parser, env=env)
-        parser.add_option('--django-root-dir', default=None,
+        cwd = os.path.abspath(os.getcwd())
+        parser.add_option('--django-root-dir', default=cwd,
                           help='Root directory of the django project (where '
-                               'manage.py is).')
+                               'manage.py is). Default: %default')
         parser.add_option('--django-host', default='0.0.0.0',
                           help='Hostname or IP address to bind manage.py '
                                'runserver to. This must match the host/ip '
@@ -174,6 +175,8 @@ class DjangoServPlugin(Plugin):
 
     def configure(self, options, conf):
         super(DjangoServPlugin, self).configure(options, conf)
+        if not self.enabled:
+            return
         self.options = options
         if self.options.django_root_dir:
             self.root = self.options.django_root_dir
