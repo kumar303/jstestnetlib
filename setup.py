@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='jstestnetlib',
-    version='0.2',
+    version='0.3',
     description="""Client library to execute JavaScript tests against a JS TestNet
                    server.""",
     long_description="""""",
